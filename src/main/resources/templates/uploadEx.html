@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <input name="uploadFiles" type="file" multiple>
+    <button class="uploadBtn">Upload</button>
+
+    <div class="uploadResult">
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script>
+        $('.uploadBtn').click(function (){
+            var formData = new FormData();
+            var inputFile = $("input[type='file']")
+            var files = inputFile[0].files;
+
+            for(var i=0; i<files.length; i++){
+                console.log(files[i]);
+                formData.append("uploadFiles", files[i]);
+            }
+
+
+            //실제 업로드 부분
+            //upload ajax
+            $.ajax({
+                url : '/uploadAjax',
+                processData : false,
+                contentType : false, //multipart/form-data 타입을 사용하기 위해 별도로 contentType을 지정하지 않음
+                data : formData,
+                type : 'POST',
+                dataType : 'json',
+                success : function(result){
+                    showUploadImages(result);
+                },
+                error : function (jqXHR, textStatus, errorThrown) {
+                    console.log(textStatus)
+
+                }
+            })
+        })
+
+        function showUploadImages(arr) {
+            console.log(arr);
+            var divArea = $(".uploadResult");
+
+            var str = "";
+
+            for (var i = 0; i < arr.length; i++) {
+                //divArea.append("<img src='/display?fileName=" + arr[i].imageURL + "'>");
+                //divArea.append("<img src='/display?fileName=" + arr[i].thumbnailURL + "'>");
+                //삭제버튼 추가
+                str += "<div>";
+                str += "<image src='/display?fileName=" + arr[i].thumbnailURL + "'>";
+                str += "<button class='removeBtn' data-name='" + arr[i].imageURL + "'>REMOVE</button>";
+                str += "</div>";
+            }
+            divArea.append(str);
+        }
+
+        $(".uploadResult").on('click', ".removeBtn", function (e) {
+            var target = $(this);
+            var fileName = target.data("name");
+            var targetDiv = $(this).closest("div");
+
+            console.log(target);
+            $.post('/removeFile', {fileName : fileName}, function (result) {
+                console.log(result);
+                if (result) {
+                    targetDiv.remove()
+                }
+            })
+        })
+
+    </script>
+
+</body>
+</html>
